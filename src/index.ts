@@ -13,6 +13,7 @@ import cors from 'cors';
 import { authenticateToken } from './middleware/auth.js';
 import analyzeProductRouter from './routes/analyzeProduct.js';
 import generateThumbnailRouter from './routes/generateThumbnail.js';
+import generateContextualThumbnailRouter from './routes/generateContextualThumbnail.js';
 import { isImagenConfigured } from './services/vertexAI.js';
 import { isGeminiConfigured } from './services/geminiAnalysis.js';
 
@@ -102,6 +103,12 @@ app.get('/api', (req: Request, res: Response) => {
         description: 'Generate photorealistic thumbnail backgrounds',
         auth: 'required',
       },
+      {
+        path: '/api/generate-contextual-thumbnail',
+        method: 'POST',
+        description: 'Generate contextual lifestyle thumbnails with scene design',
+        auth: 'required',
+      },
     ],
     models: {
       standard: 'imagen-4.0-generate-001 (75 req/min)',
@@ -114,6 +121,7 @@ app.get('/api', (req: Request, res: Response) => {
 // Protected API routes
 app.use('/api/analyze-product', authenticateToken, analyzeProductRouter);
 app.use('/api/generate-thumbnail', authenticateToken, generateThumbnailRouter);
+app.use('/api/generate-contextual-thumbnail', authenticateToken, generateContextualThumbnailRouter);
 
 // ============================================================================
 // Error Handling
@@ -124,7 +132,7 @@ app.use((req: Request, res: Response) => {
   res.status(404).json({
     error: 'Not found',
     message: `Route ${req.method} ${req.path} not found`,
-    availableRoutes: ['/health', '/api', '/api/analyze-product', '/api/generate-thumbnail'],
+    availableRoutes: ['/health', '/api', '/api/analyze-product', '/api/generate-thumbnail', '/api/generate-contextual-thumbnail'],
   });
 });
 

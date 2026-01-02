@@ -146,6 +146,153 @@ export interface GenerateThumbnailRequest {
 }
 
 // ============================================================================
+// Scene Design Types (for Contextual Lifestyle Thumbnails)
+// ============================================================================
+
+export type EnvironmentType =
+  | 'gym'
+  | 'kitchen'
+  | 'studio'
+  | 'office'
+  | 'outdoor'
+  | 'home'
+  | 'spa'
+  | 'garage'
+  | 'bathroom'
+  | 'bedroom';
+
+export interface SceneLighting {
+  type: 'dramatic' | 'soft' | 'natural' | 'studio' | 'golden-hour' | 'neon';
+  direction: 'side' | 'front' | 'back' | 'overhead' | 'ambient';
+  intensity: 'high-contrast' | 'balanced' | 'low-key';
+}
+
+export interface SceneEnvironment {
+  type: EnvironmentType;
+  description: string;
+  props: string[];
+  lighting: SceneLighting;
+}
+
+export type ColorMood = 'energetic' | 'premium' | 'calm' | 'natural' | 'bold' | 'elegant' | 'playful';
+
+export interface ColorScheme {
+  primary: string;
+  secondary: string;
+  background: string;
+  textColor: string;
+  mood: ColorMood;
+}
+
+export type PedestalStyle =
+  | 'black-glossy'
+  | 'white-matte'
+  | 'glass'
+  | 'wooden'
+  | 'metal'
+  | 'floating'
+  | 'marble'
+  | 'concrete'
+  | 'none';
+
+export type PedestalShape = 'circular' | 'rectangular' | 'hexagonal' | 'organic' | 'platform';
+export type PedestalPosition = 'center' | 'right-third' | 'left-third' | 'center-bottom';
+
+export interface PedestalDesign {
+  style: PedestalStyle;
+  shape: PedestalShape;
+  position: PedestalPosition;
+  hasReflection: boolean;
+  productSpaceRatio: number;
+}
+
+export type IconPosition =
+  | 'top-left'
+  | 'top-right'
+  | 'bottom-left'
+  | 'bottom-right'
+  | 'left-side'
+  | 'right-side'
+  | 'around-product';
+
+export type IconStyle = 'filled' | 'outline' | 'glow' | 'circle-badge';
+
+export interface IconCallout {
+  iconDescription: string;
+  label: string;
+  position: IconPosition;
+  style: IconStyle;
+}
+
+export type HeadlineStyle = 'bold-sans' | 'impact' | 'elegant-serif' | 'modern-thin' | 'brush';
+export type HeadlinePosition = 'top-center' | 'top-left' | 'bottom-center' | 'top-right';
+export type HeadlineSize = 'large' | 'xlarge' | 'medium';
+
+export interface HeadlineSpec {
+  text: string;
+  position: HeadlinePosition;
+  style: HeadlineStyle;
+  size: HeadlineSize;
+}
+
+export interface SubheadlineSpec {
+  text: string;
+  position: 'below-headline' | 'bottom-center' | 'above-headline';
+  style: 'regular' | 'light' | 'italic';
+}
+
+export interface TextLayout {
+  headline: HeadlineSpec;
+  subheadline?: SubheadlineSpec;
+  iconCallouts: IconCallout[];
+}
+
+export type ProductAspectRatio = 'tall' | 'wide' | 'square' | 'cylindrical';
+export type ProductSurfaceType = 'matte' | 'glossy' | 'metallic' | 'textured' | 'transparent';
+
+export interface ProductCharacteristics {
+  shapeDescription: string;
+  aspectRatio: ProductAspectRatio;
+  dominantColors: string[];
+  surfaceType: ProductSurfaceType;
+}
+
+export interface SceneDesign {
+  id: string;
+  environment: SceneEnvironment;
+  colorScheme: ColorScheme;
+  pedestal: PedestalDesign;
+  textLayout: TextLayout;
+  productCharacteristics: ProductCharacteristics;
+  generatedPrompt?: string;
+  createdAt: number;
+}
+
+export interface GenerateContextualThumbnailRequest {
+  /** Product cutout as base64 */
+  cutoutBase64: string;
+  /** Pre-computed scene design from frontend */
+  sceneDesign: SceneDesign;
+  /** Pre-constructed Imagen prompt */
+  imagenPrompt: string;
+  /** Number of variations (1-4) */
+  variations?: 1 | 2 | 3 | 4;
+  /** Aspect ratio */
+  aspectRatio?: AspectRatio;
+  /** Model tier */
+  modelTier?: ImagenModelTier;
+  /** Image size */
+  imageSize?: ImageSize;
+}
+
+export interface ContextualThumbnailResponse {
+  id: string;
+  variations: GeneratedImage[];
+  sceneDesign: SceneDesign;
+  modelUsed: string;
+}
+
+// ============================================================================
 // Express Extensions
 // ============================================================================
 
