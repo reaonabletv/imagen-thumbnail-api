@@ -76,14 +76,14 @@ export async function analyzeProductImage(
   console.log('[Gemini Analysis] Starting product analysis...');
 
   const ai = getGenAI();
-  const model = ai.models.get('gemini-2.0-flash');
 
   const prompt = productDescription
     ? `${ANALYSIS_PROMPT}\n\nProduct description: ${productDescription}`
     : ANALYSIS_PROMPT;
 
   try {
-    const response = await model.generateContent({
+    const response = await ai.models.generateContent({
+      model: 'gemini-2.0-flash',
       contents: [
         {
           role: 'user',
@@ -98,7 +98,7 @@ export async function analyzeProductImage(
           ],
         },
       ],
-      generationConfig: {
+      config: {
         temperature: 0.2,
         maxOutputTokens: 1024,
       },
@@ -285,7 +285,6 @@ export async function extractProductInfo(
   console.log('[Gemini Analysis] Extracting product info from script...');
 
   const ai = getGenAI();
-  const model = ai.models.get('gemini-2.0-flash');
 
   const prompt = `Analyze this product script/description and extract key information for creating a thumbnail infographic.
 
@@ -307,9 +306,10 @@ Focus on compelling, Amazon-thumbnail-style copy. Keep benefits SHORT (2-4 words
 Return ONLY the JSON object.`;
 
   try {
-    const response = await model.generateContent({
+    const response = await ai.models.generateContent({
+      model: 'gemini-2.0-flash',
       contents: [{ role: 'user', parts: [{ text: prompt }] }],
-      generationConfig: { temperature: 0.3, maxOutputTokens: 512 },
+      config: { temperature: 0.3, maxOutputTokens: 512 },
     });
 
     const text = response.text;
