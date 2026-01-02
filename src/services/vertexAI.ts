@@ -143,13 +143,34 @@ export async function generateImages(
  * Get Google Cloud access token for API calls
  */
 async function getAccessToken(): Promise<string> {
-  // In production, use Application Default Credentials
-  // This will automatically use the service account configured via
-  // GOOGLE_APPLICATION_CREDENTIALS environment variable
   const { GoogleAuth } = await import('google-auth-library');
-  const auth = new GoogleAuth({
-    scopes: ['https://www.googleapis.com/auth/cloud-platform'],
-  });
+
+  // Support JSON credentials from environment variable (for Railway/cloud deployment)
+  const serviceAccountJson = process.env.GOOGLE_SERVICE_ACCOUNT_JSON;
+
+  let auth: InstanceType<typeof GoogleAuth>;
+
+  if (serviceAccountJson) {
+    // Parse JSON credentials from environment variable
+    try {
+      const credentials = JSON.parse(serviceAccountJson);
+      auth = new GoogleAuth({
+        credentials,
+        scopes: ['https://www.googleapis.com/auth/cloud-platform'],
+      });
+      console.log('[Auth] Using service account from GOOGLE_SERVICE_ACCOUNT_JSON');
+    } catch (e) {
+      console.error('[Auth] Failed to parse GOOGLE_SERVICE_ACCOUNT_JSON:', e);
+      throw new Error('Invalid GOOGLE_SERVICE_ACCOUNT_JSON format');
+    }
+  } else {
+    // Fall back to Application Default Credentials (local dev with gcloud auth)
+    auth = new GoogleAuth({
+      scopes: ['https://www.googleapis.com/auth/cloud-platform'],
+    });
+    console.log('[Auth] Using Application Default Credentials');
+  }
+
   const client = await auth.getClient();
   const token = await client.getAccessToken();
 
