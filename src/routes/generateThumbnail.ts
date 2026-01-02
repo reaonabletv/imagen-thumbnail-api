@@ -9,6 +9,7 @@ import { z } from 'zod';
 import { v4 as uuidv4 } from 'uuid';
 import { generateImages, isImagenConfigured } from '../services/vertexAI.js';
 import { generateBackgroundPrompt, generateInfographicPrompt } from '../services/geminiAnalysis.js';
+import { compositeProductOnBackground } from '../services/compositing.js';
 import type {
   AuthenticatedRequest,
   AnalyzeProductResponse,
@@ -134,13 +135,46 @@ router.post('/', async (req: Request & AuthenticatedRequest, res: Response): Pro
       personGeneration: 'dont_allow', // Never generate people in product backgrounds
     });
 
-    const duration = Date.now() - startTime;
-    console.log(`[Generate Thumbnail] Generated ${generatedImages.length} images in ${duration}ms`);
+    const generationDuration = Date.now() - startTime;
+    console.log(`[Generate Thumbnail] Generated ${generatedImages.length} images in ${generationDuration}ms`);
 
-    // Build response
+    // Composite the product cutout onto each generated background
+    console.log(`[Generate Thumbnail] Compositing product cutout onto ${generatedImages.length} backgrounds...`);
+    const compositingStartTime = Date.now();
+
+    const compositedImages = [];
+    for (const bg of generatedImages) {
+      try {
+        const result = await compositeProductOnBackground(
+          bg.imageBase64,
+          cutoutBase64,
+          infographic?.category || industryPrompt
+        );
+        compositedImages.push({
+          imageBase64: result.imageBase64,
+          qualityScore: bg.qualityScore,
+          mimeType: 'image/png',
+          composited: true,
+        });
+        console.log(`[Generate Thumbnail] ✓ Composited image ${compositedImages.length}`);
+      } catch (compError) {
+        console.error(`[Generate Thumbnail] Compositing failed for image ${compositedImages.length + 1}:`, compError);
+        // Fall back to raw background (frontend will composite)
+        compositedImages.push({
+          ...bg,
+          composited: false,
+        });
+      }
+    }
+
+    const compositingDuration = Date.now() - compositingStartTime;
+    const totalDuration = Date.now() - startTime;
+    console.log(`[Generate Thumbnail] Compositing completed in ${compositingDuration}ms (total: ${totalDuration}ms)`);
+
+    // Build response with composited images
     const response: GenerateThumbnailResponse = {
       id: uuidv4(),
-      variations: generatedImages,
+      variations: compositedImages,
       analysis: analysis as AnalyzeProductResponse,
       modelUsed: `imagen-4.0-${modelTier.toLowerCase()}-generate-001`,
     };

@@ -83,6 +83,8 @@ export interface GeneratedImage {
   imageBase64: string;
   qualityScore: number;
   mimeType: string;
+  /** Indicates if the product cutout was composited onto the background */
+  composited?: boolean;
 }
 
 export interface GenerateThumbnailResponse {
