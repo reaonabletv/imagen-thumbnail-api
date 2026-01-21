@@ -8,7 +8,7 @@ import { Router, Request, Response } from 'express';
 import { z } from 'zod';
 import { v4 as uuidv4 } from 'uuid';
 import { generateImages, isImagenConfigured } from '../services/vertexAI.js';
-import { compositeContextualThumbnail } from '../services/contextualCompositing.js';
+import { compositeLifestyleThumbnail, type LifestyleCompositingOptions } from '../services/lifestyleCompositing.js';
 import type {
   AuthenticatedRequest,
   ContextualThumbnailResponse,
@@ -84,6 +84,9 @@ const generateContextualThumbnailSchema = z.object({
   aspectRatio: z.enum(['1:1', '3:4', '4:3', '9:16', '16:9']).optional(),
   modelTier: z.enum(['STANDARD', 'FAST', 'ULTRA']).optional(),
   imageSize: z.enum(['1K', '2K']).optional(),
+  // Lifestyle compositing options
+  blurRadius: z.number().min(8).max(15).optional(),
+  gradientOpacity: z.number().min(0.20).max(0.30).optional(),
 });
 
 /**
@@ -111,6 +114,8 @@ router.post('/', async (req: Request & AuthenticatedRequest, res: Response): Pro
     aspectRatio = '16:9',
     modelTier = 'STANDARD',
     imageSize = '1K',
+    blurRadius = 12,
+    gradientOpacity = 0.25,
   } = parseResult.data;
 
   // Check if Imagen is configured
@@ -141,17 +146,29 @@ router.post('/', async (req: Request & AuthenticatedRequest, res: Response): Pro
     const generationDuration = Date.now() - startTime;
     console.log(`[Contextual Thumbnail] Generated ${generatedImages.length} backgrounds in ${generationDuration}ms`);
 
-    // Composite product cutout onto each generated background using scene-aware positioning
-    console.log(`[Contextual Thumbnail] Compositing with scene design...`);
+    // Composite product cutout onto each generated background using lifestyle compositing
+    // (blur background + radial gradient + cutout positioning)
+    console.log(`[Contextual Thumbnail] Lifestyle compositing with blur=${blurRadius}px, gradient=${gradientOpacity * 100}%...`);
     const compositingStartTime = Date.now();
+
+    // Prepare compositing options from scene design
+    const compositingOptions: LifestyleCompositingOptions = {
+      position: sceneDesign.pedestal.position,
+      blurRadius,
+      gradientOpacity,
+    };
 
     const compositedImages = [];
     for (const bg of generatedImages) {
       try {
-        const result = await compositeContextualThumbnail(
-          bg.imageBase64,
-          cutoutBase64,
-          sceneDesign
+        // Decode base64 to buffer for compositing
+        const backgroundBuffer = Buffer.from(bg.imageBase64, 'base64');
+        const cutoutBuffer = Buffer.from(cutoutBase64, 'base64');
+
+        const result = await compositeLifestyleThumbnail(
+          backgroundBuffer,
+          cutoutBuffer,
+          compositingOptions
         );
         compositedImages.push({
           imageBase64: result.imageBase64,

@@ -7,9 +7,17 @@
     "dev": "tsx watch src/index.ts",
     "build": "tsc",
     "start": "node dist/index.js",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "vitest",
+    "test:run": "vitest run",
+    "test:coverage": "vitest run --coverage"
   },
-  "keywords": ["imagen", "thumbnail", "vertex-ai", "railway"],
+  "keywords": [
+    "imagen",
+    "thumbnail",
+    "vertex-ai",
+    "railway"
+  ],
   "author": "Darien",
   "license": "MIT",
   "dependencies": {
@@ -29,8 +37,10 @@
     "@types/jsonwebtoken": "^9.0.7",
     "@types/node": "^22.10.2",
     "@types/uuid": "^10.0.0",
+    "@vitest/coverage-v8": "^4.0.17",
     "tsx": "^4.19.2",
-    "typescript": "^5.7.2"
+    "typescript": "^5.7.2",
+    "vitest": "^4.0.17"
   },
   "optionalDependencies": {
     "@img/sharp-darwin-arm64": "0.33.5",
